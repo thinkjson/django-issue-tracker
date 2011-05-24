@@ -1,0 +1,129 @@
+{% extends template %}
+{% load comments markup %}
+
+{% block head %}
+<script type="text/javascript">
+    $(document).ready(function() {
+        setInterval(function() {
+            if ($("#id_comment").val() == "" && !( $("#id_comment").hasClass("inUse") )) {
+                $.ajax({
+                    url: "{{ request.build_absolute_uri }}",
+                    cache: false,
+                    dataType: "html",
+                    success: function(data) {
+                        $("#content").html(data);
+                    }
+                });
+            }
+        }, 15000);
+
+        $("#id_comment").focus(function() {
+            $("#id_comment").addClass("inUse");
+        });
+
+        $("#id_comment").blur(function() {
+            $("#id_comment").removeClass("inUse");
+        });
+    })
+</script>
+{% endblock %}
+
+{% block maincontent %}
+	{% if errors %}
+	{% for error in errors %}<p class='error'>{{ error }}</p>{% endfor %}
+	{% endif %}
+	
+	<table class="single" id="ticket">
+	<tr>
+		<td class='half'>Submitted <abbr title='{{ ticket.submitted_date|date:"n/j/Y \a\t g:i a" }}'>{{ ticket.submitted_date|timesince }} ago</abbr> 
+			by <b>{{ ticket.author }}</b><br />
+			{% ifnotequal ticket.last_modified_by "" %}Modified <abbr title='{{ ticket.modified_date|date:"n/j/Y \a\t g:i a" }}'>{{ ticket.modified_date|timesince }} ago</abbr>
+                        by <b>{{ ticket.last_modified_by }}</b>{% endifnotequal %}
+			<div>
+			{% if request.user.is_staff %}<a href="{% url admin:tickets_ticket_change ticket.id %}" class="admin button">Administer</a>{% endif %}
+			</div>
+		</td>
+		
+		<td class='{{ ticket.get_status_display|cut:" " }}'>
+		Status: <b>{{ ticket.get_status_display }}</b><br />
+		Request type: {{ ticket.get_request_type_display }}<br />
+		Priority: {{ ticket.get_priority_display }}<br />
+		Assigned to: {{ ticket.assigned_to }}</td>
+	</tr>
+	<tr>
+		<td><div><b>Description:</b><br />{{ ticket.description|linebreaksbr|urlize|markdown }}</div></td>
+		<td id="notes">{% get_comment_list for ticket as comment_list %}
+			<b>Comments:</b><br />
+			{% for comment in comment_list %}
+				<div class="bubble">
+				<blockquote>{{ comment.comment|urlize|markdown }}</blockquote>
+				<cite><b>{{ comment.user_name }}</b> on {{ comment.submit_date|date:"n/j/Y \a\t g:i a" }}</cite>
+				</div>
+			{% endfor %}
+			
+			{% get_comment_form for ticket as form %}
+			<form action="{% comment_form_target %}" method="post"
+                  onsubmit="javascript:return $('#id_comment').text()!='';">
+                                {% csrf_token %}
+				{{ form.comment }}
+				{{ form.content_type }}
+				<div style='display: none;'>{{ form.honeypot }}</div>
+				{{ form.object_pk }}
+				{{ form.timestamp }}
+				{{ form.security_hash }}
+				<input type="hidden" name="next" value="{% url tickets.views.show_ticket ticket.id %}" />
+                <div style="font-size: 8pt; color: #333;">Type your message and press enter.</div>
+			</form></td>
+	</tr>
+	<tr>
+		<td><b>Authorized users:</b>
+			<div>
+			{% for user in ticket.authorized_users.all %}
+                            {% ifequal user request.user %}
+                                <a href="#" class="button">{% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{user.username }}{% endif %}</a>
+                            {% else %}
+				<form method="post" action="{% url tickets.views.remove_user ticket.id %}" style="float:left;padding-right:5px;">
+                                        {% csrf_token %}
+					<input type="hidden" name="user" value="{{ user.id }}" />
+					<button type="submit" class="delete">{% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{user.username }}{% endif %}</button>
+				</form>
+                            {% endifequal %}
+			{% endfor %}
+			</div>
+			{% if available_users %}
+				<form method="post" action="{% url tickets.views.add_user ticket.id %}" style="padding-top: 5px; clear: both;">
+                                {% csrf_token %}
+				<select name="user" style='padding: 5px;'>
+				{% for user in available_users.all %}
+					<option value="{{ user.id }}">{% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{user.username }}{% endif %}</option>
+				{% endfor %}
+				</select><button type="submit" class="add">Add user</button>
+				</form>
+			{% endif %}
+		</td>
+		<td><b>Attachments:</b><br />
+		{% if ticket.attachments.all %}
+		<ul>
+			{% for attachment in ticket.attachments.all %}
+			<li>
+                            <a href="{{ attachment.attachment.url }}">{{ attachment.attachment.name|cut:"attachments/" }}</a>
+                            <a href="{% url tickets.views.remove_attachment ticket_id=ticket.id,attachment_id=attachment.id %}" class="error">X</a>
+                        </li>
+			{% endfor %}
+		</ul>
+		{% else %}
+			This ticket does not have any attachments.
+		{% endif %}
+		<div class="right"><a href="{% url tickets.views.add_attachment ticket_id=ticket.id %}" class="add button">Add Attachment</a></div>
+		</td>
+	</tr>
+	</table>
+	
+	<script type="text/javascript">
+		$("#notes textarea").bind('keyup', function(event) {
+			if (event.keyCode == 13) { 
+				$(this).parent().submit();
+			}
+		});
+	</script>
+{% endblock %}

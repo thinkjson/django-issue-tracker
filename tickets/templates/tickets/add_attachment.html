@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block maincontent %}
+<p>Attach a file to {{ ticket_name }}:</p>
+<form enctype="multipart/form-data" method="post" action="">
+    {% csrf_token %}
+{{ form }}<button type='submit'>Attach file</button>
+</form>
+{% endblock %}

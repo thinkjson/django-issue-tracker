@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <title>{{ title }}</title>
+    <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js'></script>
+    <style type="text/css">
+        * {
+            font-family: sans-serif;
+        }
+
+        body {
+            background-color: #006699;
+            font-size: 9pt;
+        }
+
+        #maincontent {
+            width: 785px;
+            margin: 20px auto;
+            border: 1px solid #000;
+            background-color: #fff;
+            padding: 10px;
+        }
+
+        td {
+            vertical-align: top;
+            text-align: left;
+        }
+
+        .single {
+            width: 100%;
+        }
+
+        .single td {
+            padding: 2px;
+            margin: 0;
+            border: 1px solid #ccc;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .button, button {
+            background-color: #333;
+            color: #fff;
+            text-decoration: none;
+            padding: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="maincontent">
+        <div id="navigation" class="right">
+            <a href="/">Home</a> -
+            <a href="{% url admin:index %}">Admin</a>
+        </div>
+        
+        {% if title %}<h1>{{ title }}</h1>{% endif %}
+        <div id="content">
+        {% block maincontent %}{% endblock %}
+        </div>
+    </div>
+</body>
+</html>

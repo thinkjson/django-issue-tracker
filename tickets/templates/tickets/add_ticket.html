@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block maincontent %}
+<form enctype="multipart/form-data" method="post" action="">
+    {% csrf_token %}
+<table>
+    {{ form.as_table }}
+	{{ attachment.as_table }}
+<tr><td>&nbsp;</td><td><input type='submit' value='Create Ticket' /></td></tr>
+</table>
+<input type='hidden' name='author_id' value='{{ request.user.username }}' />
+</form>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% load pagination_tags %}
+
+{% block maincontent %}
+    <div class="right">
+        <a href="{% url tickets.views.add_ticket %}" class="button add">New Ticket</a>
+    </div>
+	{% if tickets %}
+		<table class='single'>
+		<tr><th>Name</th><th>Author</th><th>Submitted</th><th>Ticket Type</th><th>Priority</th><th>Status</th></tr>
+		{% autopaginate tickets 15 %}
+		{% for ticket in tickets %}
+			<tr>
+				<td class='neutral'><a href='{% url tickets.views.show_ticket ticket_id=ticket.id %}'>{{ ticket.title }}</a></td>
+				<td class='neutral'>{{ ticket.author }}</td>
+				<td class='neutral'>{{ ticket.submitted_date|timesince }} ago</td>
+				<td class='{{ ticket.get_request_type_display|cut:" " }}'>{{ ticket.get_request_type_display }}</td>
+				<td class='{{ ticket.get_priority_display|cut:" " }}'>{{ ticket.get_priority_display }}</td>
+				<td class='{{ ticket.get_status_display|cut:" " }}'>{{ ticket.get_status_display }}</td>
+			</tr>
+		{% endfor %}
+		</table>
+		{% paginate %}
+	{% else %}
+		<p>There are no tickets at this time.</p>
+	{% endif %}
+{% endblock %}
